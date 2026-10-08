@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zeus Panel Deployer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #0b0d14;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      color: #8b5cf6;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+
+    .card {
+      background: #131726;
+      border: 1px solid #1e2a3a;
+      border-radius: 12px;
+      padding: 28px;
+      margin-bottom: 16px;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      color: #94a3b8;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #1e2a3a;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    .field input {
+      width: 100%;
+      background: #0b0d14;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #e2e8f0;
+      font-size: 0.9rem;
+      direction: ltr;
+      transition: border-color 0.2s;
+    }
+
+    .field input:focus {
+      outline: none;
+      border-color: #8b5cf6;
+    }
+
+    .field .hint {
+      font-size: 0.75rem;
+      color: #475569;
+      margin-top: 4px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      font-weight: 600;
+    }
+
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+      color: white;
+      margin-bottom: 10px;
+    }
+
+    .btn-secondary {
+      background: #1e2a3a;
+      color: #94a3b8;
+    }
+
+    .btn-secondary:hover { background: #253347; }
+
+    .result {
+      display: none;
+      background: #0d1117;
+      border: 1px solid #22c55e33;
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 16px;
+    }
+
+    .result.show { display: block; }
+
+    .result h3 {
+      color: #22c55e;
+      margin-bottom: 16px;
+      font-size: 1rem;
+    }
+
+    .result-row {
+      margin-bottom: 12px;
+    }
+
+    .result-row .label {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-bottom: 3px;
+    }
+
+    .result-row .value {
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      background: #131726;
+      padding: 8px 12px;
+      border-radius: 6px;
+      direction: ltr;
+      word-break: break-all;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      color: #8b5cf6;
+      cursor: pointer;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .copy-btn:hover { color: #a78bfa; }
+
+    .error {
+      display: none;
+      background: #1a0a0a;
+      border: 1px solid #ef444433;
+      border-radius: 8px;
+      padding: 16px;
+      color: #f87171;
+      font-size: 0.85rem;
+      margin-top: 12px;
+    }
+
+    .error.show { display: block; }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 16px;
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+
+    .loading.show { display: block; }
+
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #8b5cf633;
+      border-top-color: #8b5cf6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .advanced-toggle {
+      color: #64748b;
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-align: center;
+      padding: 8px;
+      margin-bottom: 16px;
+    }
+
+    .advanced-toggle:hover { color: #94a3b8; }
+
+    .advanced { display: none; }
+    .advanced.open { display: block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⚡ Zeus Deployer</h1>
+      <p>استقرار خودکار پنل زئوس روی Cloudflare Workers</p>
+    </div>
+
+    <div class="card">
+      <h2>🔑 توکن Cloudflare</h2>
+      <div class="field">
+        <label>API Token</label>
+        <input type="password" id="cf_token" placeholder="Bearer Token خود را وارد کنید" />
+        <div class="hint">
+          نیاز به دسترسی: Workers Scripts (Edit) + D1 (Edit) + Account Settings (Read)
+        </div>
+      </div>
+
+      <div class="advanced-toggle" onclick="toggleAdvanced()">
+        ⚙️ تنظیمات پیشرفته (اختیاری) ▾
+      </div>
+
+      <div class="advanced" id="advanced">
+        <div class="field">
+          <label>نام Worker (اختیاری)</label>
+          <input type="text" id="worker_name" placeholder="zeus-xxxxxx (خودکار)" />
+        </div>
+        <div class="field">
+          <label>مسیر پنل (اختیاری)</label>
+          <input type="text" id="admin_path" placeholder="/panel_xxxxxxxx (خودکار)" />
+        </div>
+        <div class="field">
+          <label>UUID (اختیاری)</label>
+          <input type="text" id="uuid" placeholder="خودکار تولید می‌شود" />
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="deploy()">🚀 استقرار روی Cloudflare</button>
+      <button class="btn btn-secondary" onclick="downloadZip()">⬇️ دانلود فایل‌ها (بدون استقرار)</button>
+    </div>
+
+    <div class="loading" id="loading">
+      <span class="spinner"></span>
+      در حال استقرار پنل زئوس...
+    </div>
+
+    <div class="error" id="error"></div>
+
+    <div class="result" id="result">
+      <h3>✅ استقرار موفق!</h3>
+      <div class="result-row">
+        <div class="label">آدرس پنل مدیریت</div>
+        <div class="value">
+          <span id="r-panel"></span>
+          <button class="copy-btn" onclick="copy('r-panel')">کپی</button>
+        </div>
+      </div>
+      <div class="result-row">
+        <div class="label">لینک سابسکریپشن</div>
+        <div class="value">
+          <span id="r-sub"></span>
+          <button class="copy-btn" onclick="copy('r-sub')">کپی</button>
+        </div>
+      </div>
+      <div class="result-row">
+        <div class="label">UUID</div>
+        <div class="value">
+          <span id="r-uuid"></span>
+          <button class="copy-btn" onclick="copy('r-uuid')">کپی</button>
+        </div>
+      </div>
+      <div class="result-row">
+        <div class="label">نام Worker</div>
+        <div class="value">
+          <span id="r-name"></span>
+          <button class="copy-btn" onclick="copy('r-name')">کپی</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleAdvanced() {
+      const el = document.getElementById('advanced');
+      el.classList.toggle('open');
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error');
+      el.textContent = '❌ ' + msg;
+      el.classList.add('show');
+    }
+
+    function hideAll() {
+      document.getElementById('error').classList.remove('show');
+      document.getElementById('result').classList.remove('show');
+      document.getElementById('loading').classList.remove('show');
+    }
+
+    function getParams() {
+      return {
+        cf_token: document.getElementById('cf_token').value.trim(),
+        worker_name: document.getElementById('worker_name').value.trim() || null,
+        admin_path: document.getElementById('admin_path').value.trim() || null,
+        uuid: document.getElementById('uuid').value.trim() || null,
+      };
+    }
+
+    async function deploy() {
+      hideAll();
+      const params = getParams();
+      if (!params.cf_token) {
+        showError('لطفاً توکن Cloudflare را وارد کنید.');
+        return;
+      }
+
+      document.getElementById('loading').classList.add('show');
+      document.querySelectorAll('.btn').forEach(b => b.disabled = true);
+
+      try {
+        const resp = await fetch('/api/deploy/cloudflare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(params)
+        });
+
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          throw new Error(data.detail || 'خطای ناشناخته');
+        }
+
+        document.getElementById('loading').classList.remove('show');
+        document.getElementById('r-panel').textContent = data.panel_url;
+        document.getElementById('r-sub').textContent = data.sub_url;
+        document.getElementById('r-uuid').textContent = data.uuid;
+        document.getElementById('r-name').textContent = data.worker_name;
+        document.getElementById('result').classList.add('show');
+
+      } catch (err) {
+        document.getElementById('loading').classList.remove('show');
+        showError(err.message);
+      } finally {
+        document.querySelectorAll('.btn').forEach(b => b.disabled = false);
+      }
+    }
+
+    async function downloadZip() {
+      hideAll();
+      const params = getParams();
+      // Remove cf_token for download
+      delete params.cf_token;
+
+      document.getElementById('loading').classList.add('show');
+      document.querySelectorAll('.btn').forEach(b => b.disabled = true);
+
+      try {
+        const resp = await fetch('/api/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(params)
+        });
+
+        if (!resp.ok) {
+          const data = await resp.json();
+          throw new Error(data.detail || 'خطا در دانلود');
+        }
+
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'zeus-worker.zip';
+        a.click();
+        URL.revokeObjectURL(url);
+
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        document.getElementById('loading').classList.remove('show');
+        document.querySelectorAll('.btn').forEach(b => b.disabled = false);
+      }
+    }
+
+    function copy(id) {
+      const text = document.getElementById(id).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector(`#${id}`).nextElementSibling;
+        btn.textContent = '✓';
+        setTimeout(() => btn.textContent = 'کپی', 1500);
+      });
+    }
+  </script>
+</body>
+</html>
